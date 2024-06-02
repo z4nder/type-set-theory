@@ -4,6 +4,7 @@ pub trait Set<T> {
     fn has_element(&self, x: T) -> ElementOf;
     fn include(&self, x: &Self) -> Included;
     fn union(&self, x: &Self) -> Self;
+    fn intersect(&self, x: &Self) -> Self;
 }
 
 pub struct FiniteSet<T> {
@@ -67,6 +68,13 @@ impl<T: PartialEq + Clone> Set<T> for FiniteSet<T> {
             values,
         }
     }
+
+    fn intersect(&self, x: &Self) -> Self {
+        FiniteSet {
+            label: format!("{} ∪ {}", self.label, x.label),
+            values: x.values.iter().cloned().filter(|v| self.values.contains(v)).collect(),
+        }
+    }
 }
 
 fn main() {
@@ -89,4 +97,5 @@ fn main() {
     println!("{} {} {}", b.label, b.include(&a), a.label);
 
     println!("{} -> {:?}", a.union(&b).label, a.union(&b).values);
+    println!("{} -> {:?}", b.intersect(&a).label, b.intersect(&a).values);
 }
