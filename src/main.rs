@@ -3,6 +3,7 @@ use std::fmt;
 pub trait Set<T> {
     fn has_element(&self, x: T) -> ElementOf;
     fn include(&self, x: &Self) -> Included;
+    fn union(&self, x: &Self) -> Self;
 }
 
 pub struct FiniteSet<T> {
@@ -11,20 +12,20 @@ pub struct FiniteSet<T> {
 }
 
 pub enum ElementOf{
-    Yes,
-    No
+    Yep,
+    Nop
 }
 
 pub enum Included{
-    Yes,
-    No
+    Yep,
+    Nop
 }
 
 impl fmt::Display for ElementOf {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", match self {
-            Self::Yes => "∈",
-            Self::No => "∉"
+            Self::Yep => "∈",
+            Self::Nop => "∉"
         })
     }
 }
@@ -32,28 +33,39 @@ impl fmt::Display for ElementOf {
 impl fmt::Display for Included {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", match self {
-            Self::Yes => "C",
-            Self::No => "Ȼ"
+            Self::Yep => "C",
+            Self::Nop => "Ȼ"
         })
     }
 }
 
 
-impl<T: PartialEq> Set<T> for FiniteSet<T> {
+impl<T: PartialEq + Clone> Set<T> for FiniteSet<T> {
     fn has_element(&self, x: T) -> ElementOf {
         if self.values.contains(&x) {
-            return ElementOf::Yes
+            return ElementOf::Yep
         }
 
-        ElementOf::No
+        ElementOf::Nop
     }
 
     fn include(&self, x: &Self) -> Included {
         if x.values.iter().all(|v| self.values.contains(v)) {
-            return Included::Yes
+            return Included::Yep
         }
 
-        Included::No
+        Included::Nop
+    }
+
+    fn union(&self, x: &Self) -> Self {
+        let mut values = self.values.clone();
+        let x_values: Vec<T> = x.values.iter().cloned().filter(|v| !values.contains(v)).collect();
+        
+        values.extend(x_values);
+        FiniteSet {
+            label: format!("{} ∪ {}", self.label, x.label),
+            values,
+        }
     }
 }
 
@@ -67,7 +79,7 @@ fn main() {
 
     let b = FiniteSet {
         label: "B".to_string(),
-        values: vec![1, 2],
+        values: vec![1, 2, 8],
     };
 
     println!("{} {} {}", a.label, a.has_element(4), 4);
@@ -75,4 +87,6 @@ fn main() {
 
     println!("{} {} {}", a.label, a.include(&b), b.label);
     println!("{} {} {}", b.label, b.include(&a), a.label);
+
+    println!("{} -> {:?}", a.union(&b).label, a.union(&b).values);
 }
